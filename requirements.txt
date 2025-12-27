@@ -10,3 +10,7 @@ virtualenv-clone==0.5.7
 virtualenvwrapper==6.1.0
 Werkzeug==3.0.3
 WTForms==3.1.2
+requests
+pymysql
+psycopg2-binary
+
