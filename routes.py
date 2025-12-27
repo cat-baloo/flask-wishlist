@@ -1,60 +1,66 @@
-from flask import render_template, redirect, url_for, request, flash, abort
-from app import app, db
+from flask import render_template, redirect, url_for, request, flash, abort, Blueprint, jsonify
+from extensions import db
 from models import Task
 from datetime import datetime, timezone
 import forms
-#from itsdangerous import BadSignature, SignatureExpired
 
-#@app.before_request
-#def verify_csrf():
-#  if request.method in ("POST", "PUT", "PATCH", "DELETE"):
-#    token = request.form.get("csrf_token") or request.headers.get("X-CSRFToken")
-    
-#    if not token:
-#      abort(400)
-#    try:
-#      csrf_serialiser.loads(token, max_age=3600)
-#    except (BadSignature, SignatureExpired):
-#       abort(400)
+bp = Blueprint("routes", __name__)
 
-@app.route('/')
-@app.route('/index')
+@bp.route("/health")
+def health():
+    return jsonify({"status": "ok"})
 
+@bp.route("/tasks", methods=["GET"])
+def list_tasks():
+    tasks = Task.query.all()
+    return jsonify([{"id": t.id, "title": t.title, "date": t.date.isoformat()} for t in tasks])
+
+
+@bp.route("/", methods=["GET"])
+@bp.route("/index", methods=["GET"])
 def index():
-  tasks = Task.query.all()
-  return render_template('index.html', tasks=tasks, current_title='Your Christmas List')
+    tasks = Task.query.all()
+    return render_template("index.html", tasks=tasks, current_title="Your Christmas List")
 
-@app.route('/tasks/<int:task_id>/delete', methods=['POST'])
+
+@bp.route("/tasks/<int:task_id>/delete", methods=["POST"])
 def delete_task(task_id):
-   task = Task.query.get_or_404(task_id)
-   db.session.delete(task)
-   db.session.commit()
-   flash(f'Deleted: {task.id}, {task.title}','success')
-   return redirect(url_for('index'))
+    task = Task.query.get_or_404(task_id)
+    db.session.delete(task)
+    db.session.commit()
+    flash(f"Deleted: {task.id}, {task.title}", "success")
+    # Use blueprint endpoint name
+    return redirect(url_for("routes.index"))
 
-@app.route('/tasks/<int:task_id>/edit', methods=['POST'])
+
+
+@bp.route("/tasks/<int:task_id>/edit", methods=["POST"])
 def edit_task(task_id):
-   task = Task.query.get_or_404(task_id)
-   new_title = request.form.get("title", "").strip()
+    task = Task.query.get_or_404(task_id)
+    new_title = request.form.get("title", "").strip()
 
-   if not new_title:
-      flash("Wish cannot be empty","error")
+    if not new_title:
+        flash("Wish cannot be empty", "error")
+        return redirect(url_for("routes.index"))
 
-   task.title = new_title
-   db.session.commit()
-   return redirect(url_for("index"))
+    task.title = new_title
+    db.session.commit()
+    return redirect(url_for("routes.index"))
 
-@app.route('/add', methods=['GET','POST'])
+
+
+@bp.route("/add", methods=["GET", "POST"])
 def add():
-    
     form = forms.AddTaskForm()
 
     if form.validate_on_submit():
-       t = Task(title=form.title.data, date=datetime.now(timezone.utc))
-       db.session.add(t)
-       db.session.commit()
-       
-       print('Submitted wish', form.title.data)
-       return redirect(url_for('index'))
-       return render_template ('about.html', form=form, title=form.title.data)
-    return render_template('about.html', current_title='Secret page', form=form) 
+        # If models.Task.date is a Date column, store a date; else change the column to DateTime
+        t = Task(title=form.title.data, date=datetime.now(timezone.utc).date())
+        db.session.add(t)
+        db.session.commit()
+
+        flash(f"Added: {t.title}", "success")
+        return redirect(url_for("routes.index"))
+
+    # GET or validation errors
+    return render_template("about.html", current_title="Secret page", form=form)
