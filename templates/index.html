@@ -27,7 +27,7 @@
     <ul>
         {% for task in tasks %}
             <li class="task-item">
-            <form class="inline-form" action="{{ url_for('edit_task', task_id=task.id) }}" method="POST">
+            <form class="inline-form" action="{{ url_for('routes.edit_task', task_id=task.id) }}" method="POST">
             <input type="text" name="title" value="{{ task.title}}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-primary">Save</button>
@@ -35,7 +35,7 @@
             </form>
             <h3><span class="title-text">{{ task.title }}</span></h3> created on {{ task.date }}
             
-            <form action="{{ url_for('delete_task', task_id=task.id) }}" method="POST" onsubmit="return confirm('Delete this wish permanently?')">
+            <form action="{{ url_for('routes.delete_task', task_id=task.id) }}" method="POST" onsubmit="return confirm('Delete this wish permanently?')">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="delete-btn">Delete</button>
             </form>
