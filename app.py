@@ -11,10 +11,8 @@ def create_app():
     # --- Database config ---
     # Prefer DATABASE_URL from Railway. Falls back to SQLite for local dev.
     
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///data.db"   # local dev fallback)
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///data.db")
 
-    # If you stay with SQLite on Railway, make it absolute and writable:
-    # db_url = os.getenv("DATABASE_URL", "sqlite:////app/data.db")
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
